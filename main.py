@@ -69,6 +69,8 @@ def main(page: ft.Page):
         page.update()
 
     def validate(e):
+        global user_login_value
+        user_login_value = e.control.value
         if all([user_login.value, user_pass.value]):
             btn_reg.disabled = False
             btn_auth.disabled = False
@@ -135,24 +137,44 @@ def main(page: ft.Page):
         alignment=ft.MainAxisAlignment.CENTER
     )
 
-    panel_cabinet = ft.Row(
-        [
-            ft.Column(
+    
+
+    def add_task(e):
+        """Добавляет задачу в список."""
+        if task_input.value:
+            task_list.controls.append(ft.Text(task_input.value))
+            task_input.value = ""
+            page.update()  # Обновляем страницу, чтобы отобразить новую задачу
+
+    btn_add_task.on_click = add_task  # Привязываем обработчик к кнопке
+
+    def add_task(e):
+        """Добавляет задачу в список."""
+        if task_input.value:
+            task_list.controls.append(ft.Text(task_input.value))
+            task_input.value = ""
+            page.update()  # Обновляем страницу, чтобы отобразить новую задачу
+
+    btn_add_task.on_click = add_task  # Привязываем обработчик к кнопке
+
+    panel_cabinet = ft.Column(
+        controls=[
+            ft.Row(
                 [
-                    ft.Row([
-                        ft.Text('Кабинет', size=24, weight="bold"),
-                        ft.IconButton(icon=ft.icons.WB_SUNNY, tooltip="Сменить тему", on_click=toggle_theme),
-                    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                    ft.Text('Здесь вы можете управлять своими задачами.', size=16),
-                    task_input,
-                    btn_add_task,
-                    task_list,
-                ]
-            )
+                    ft.Text("Кабинет Игрока", size=24, weight="bold"),
+                ],
+                alignment=ft.MainAxisAlignment.CENTER
+            ),
+            ft.Text("Ваша статистика:", size=16),
+            ft.Text(f"Никнейм: {user_login.value}", size=14),
+            ft.Text(f"Очки: {1}", size=14),
+            ft.ElevatedButton("Профиль", on_click=lambda _: print("Переход в профиль")),
         ],
-        alignment=ft.MainAxisAlignment.CENTER,
-        spacing=20  # Добавляем отступы между элементами.
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        spacing=10,
     )
+    
+    page.add(panel_cabinet)
 
     def navigate(e):
         """Обрабатывает переключение между панелями."""
@@ -237,14 +259,39 @@ def main(page: ft.Page):
     def show_settings():
         """Отображает настройки."""
         settings_panel = ft.Column(
-            [
-                ft.Text("Настройки", size=24),
-                ft.Text("Здесь будут настройки вашего лаунчера."),
-                ft.ElevatedButton(text="Применить", on_click=lambda e: snack_bar_message("Настройки применены!"))
+            controls=[
+                ft.Text("Настройки", size=24, weight=ft.FontWeight.BOLD),
+                ft.Text("Здесь вы можете настроить ваш лаунчер.", size=16),
+                ft.Divider(height=2, color=ft.colors.GREY_400),  # Тонкий разделитель
+
+                ft.Row(
+                    [
+                        ft.Text("Тема:", size=18),
+                        ft.ElevatedButton(
+                            text="Сменить тему",
+                            icon=ft.icons.WB_SUNNY,
+                            on_click=toggle_theme,
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_AROUND,  # Равномерное распределение
+                ),
+                ft.Divider(height=2, color=ft.colors.GREY_400),  # Тонкий разделитель
+
+                ft.ElevatedButton(
+                    text="Применить",
+                    on_click=lambda e: snack_bar_message("Настройки применены!"),
+                    width=150,  # Фиксированная ширина кнопки
+                ),
             ],
-            alignment=ft.MainAxisAlignment.CENTER
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,  # Центрирование по горизонтали
+            spacing=15,  # Расстояние между элементами
+            width=400,  # Фиксированная ширина панели настроек
         )
         page.add(settings_panel)
+        page.update()  # Добавлено обновление страницы
+
+    show_settings()
+    page.update()
 
     def show_news():
         """Отображает новости."""
