@@ -25,22 +25,23 @@ def main(page: ft.Page):
             page.window.width = 600
             page.window.height = 600
 
-            # Добавляем иконку "Кабинет" в NavigationBar
-            page.navigation_bar.destinations.append(
+            # Обновляем NavigationBar после авторизации
+            page.navigation_bar.destinations = [
                 ft.NavigationBarDestination(
                     icon=ft.Icons.BOOK,
                     label='Кабинет',
                     selected_icon=ft.Icons.BOOKMARK,
                 )
-            )
+            ]
+            page.navigation_bar.selected_index = 0  # Выбираем кабинет
+            page.update()
 
             snack_bar_message("Успешная авторизация!")
 
             # Переход в кабинет
             load_tasks()
-            page.navigation_bar.selected_index = 2  # Выбираем кабинет
-            page.update()
-            navigate(None)
+            show_cabinet()  # Отображаем кабинет
+
         else:
             snack_bar_message("Неверно введенные данные!")
 
@@ -77,73 +78,6 @@ def main(page: ft.Page):
 
         page.update()
 
-    def add_task(e):
-        task_text = task_input.value.strip()
-        if task_text:
-            db = sqlite3.connect('tasks.db')
-            cur = db.cursor()
-            cur.execute("INSERT INTO tasks (user_id, task) VALUES ((SELECT id FROM users WHERE login=?), ?)", (user_login.value, task_text))
-            db.commit()
-            db.close()
-            
-            task_input.value = ''
-            load_tasks()  # Обновляем список задач
-            snack_bar_message("Задача успешно добавлена!")
-            page.update()
-
-    def load_tasks():
-        task_list.controls.clear()  # Очищаем список перед загрузкой новых данных
-        db = sqlite3.connect('tasks.db')
-        cur = db.cursor()
-        cur.execute("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, user_id INTEGER, task TEXT)")
-        
-        if is_authenticated:
-            cur.execute("SELECT * FROM tasks WHERE user_id=(SELECT id FROM users WHERE login=?)", (user_login.value,))
-            res = cur.fetchall()
-            
-            for task in res:
-                task_list.controls.append(ft.Row([
-                    ft.Text(task[2]),
-                    ft.IconButton(icon=ft.icons.DELETE, on_click=lambda e, task_id=task[0]: delete_task(task_id)),
-                    ft.IconButton(icon=ft.icons.EDIT, on_click=lambda e, task_text=task[2]: edit_task(task_text,))
-                ]))
-        
-        db.commit()
-        db.close()
-
-    def delete_task(task_id):
-        db = sqlite3.connect('tasks.db')
-        cur = db.cursor()
-        cur.execute("DELETE FROM tasks WHERE id=?", (task_id,))
-        db.commit()
-        db.close()
-        
-        load_tasks()  # Обновляем список задач
-        snack_bar_message("Задача успешно удалена!")
-        page.update()
-
-    def edit_task(task_text, task_id):
-        task_input.value = task_text  # Заполняем поле ввода текстом задачи
-        btn_add_task.text = "Сохранить"
-        
-        def save_edit(e):
-            new_task_text = task_input.value.strip()
-            if new_task_text:
-                db = sqlite3.connect('tasks.db')
-                cur = db.cursor()
-                cur.execute("UPDATE tasks SET task=? WHERE id=?", (new_task_text, task_id))
-                db.commit()
-                db.close()
-
-                load_tasks()  # Обновляем список задач после редактирования
-                btn_add_task.text = "Добавить"  # Возвращаем текст кнопки обратно
-
-                snack_bar_message("Задача успешно обновлена!")
-                task_input.value = ''  # Очищаем поле ввода
-                page.update()
-
-        btn_add_task.on_click = save_edit
-
     def snack_bar_message(message):
         snack_bar = ft.SnackBar(ft.Text(message))
         page.open(snack_bar)
@@ -168,7 +102,7 @@ def main(page: ft.Page):
 
     # Поля для работы с задачами
     task_input = ft.TextField(label="Введите задачу", width=200)
-    btn_add_task = ft.OutlinedButton(text="Добавить", width=200, on_click=add_task)
+    btn_add_task = ft.OutlinedButton(text="Добавить", width=200, on_click=lambda e: add_task())
 
     # Список задач
     task_list = ft.ListView(spacing=10)
@@ -221,30 +155,152 @@ def main(page: ft.Page):
     )
 
     def navigate(e):
-        index = page.navigation_bar.selected_index
+        """Обрабатывает переключение между панелями."""
         page.clean()
+        if is_authenticated:
+            if page.navigation_bar.selected_index == 0:
+                show_cabinet()
+            elif page.navigation_bar.selected_index == 1:
+                show_games()
+            elif page.navigation_bar.selected_index == 2:
+                show_settings()
+            elif page.navigation_bar.selected_index == 3:
+                show_news()
+            elif page.navigation_bar.selected_index == 4:
+                show_achievements()
+            elif page.navigation_bar.selected_index == 5:
+                show_community()
+        else:
+            if page.navigation_bar.selected_index == 0:
+                show_register()
+            elif page.navigation_bar.selected_index == 1:
+                show_auth()
 
-        if index == 0:
-            page.add(panel_register)
-        elif index == 1:
-            page.add(panel_auth)
-        elif index == 2:
-            if is_authenticated:  # Проверяем статус авторизации перед отображением кабинета
-                load_tasks()  # Загружаем задачи при переходе в кабинет
-                page.add(panel_cabinet)
-    
+    def show_register():
+        """Отображает панель регистрации."""
+        page.clean()
+        page.add(panel_register)
+
+    def show_auth():
+        """Отображает панель авторизации."""
+        page.clean()
+        page.add(panel_auth)
+
+    def show_cabinet():
+        """Отображает панель кабинета."""
+        page.clean()
+        load_tasks()  # Загружаем задачи при переходе в кабинет
+        page.add(panel_cabinet)
+        
+        # Добавляем вкладки на навигационную панель
+        if len(page.navigation_bar.destinations) == 1:  # Проверка, чтобы не добавлять повторно
+            page.navigation_bar.destinations.extend([
+                ft.NavigationBarDestination(icon=ft.Icons.GAMES, label='Игры'),
+                ft.NavigationBarDestination(icon=ft.Icons.SETTINGS, label='Настройки'),
+                ft.NavigationBarDestination(icon=ft.Icons.NEWSPAPER, label='Новости'),
+                ft.NavigationBarDestination(icon=ft.Icons.STAR, label='Достижения'),
+                ft.NavigationBarDestination(icon=ft.Icons.PEOPLE, label='Сообщество'),
+            ])
+            page.update()
+
+    def add_task():
+        """Добавляет задачу в список."""
+        task_text = task_input.value.strip()
+        
+        if task_text:
+            # Добавление задачи в список и базу данных (если нужно)
+            task_list.controls.append(ft.Text(task_text))
+            task_input.value = ''  # Очищаем поле ввода задачи
+            snack_bar_message("Задача добавлена!")
+        
+        page.update()
+
+    def load_tasks():
+        """Загружает задачи (пример с заглушкой)."""
+        # Здесь можно добавить логику загрузки задач из базы данных.
+        task_list.controls.clear()  # Очищаем текущий список задач (если есть).
+
+    def show_games():
+        """Отображает список игр."""
+        games_panel = ft.Column(
+            [
+                ft.Text("Доступные игры:", size=24),
+                # Здесь можно добавить кнопки для запуска игр
+                ft.ElevatedButton(text="Игра 1", on_click=lambda e: launch_game("Игра 1")),
+                ft.ElevatedButton(text="Игра 2", on_click=lambda e: launch_game("Игра 2")),
+                # Добавьте другие игры по аналогии
+            ],
+            alignment=ft.MainAxisAlignment.CENTER
+        )
+        page.add(games_panel)
+
+    def show_settings():
+        """Отображает настройки."""
+        settings_panel = ft.Column(
+            [
+                ft.Text("Настройки", size=24),
+                ft.Text("Здесь будут настройки вашего лаунчера."),
+                ft.ElevatedButton(text="Применить", on_click=lambda e: snack_bar_message("Настройки применены!"))
+            ],
+            alignment=ft.MainAxisAlignment.CENTER
+        )
+        page.add(settings_panel)
+
+    def show_news():
+        """Отображает новости."""
+        news_panel = ft.Column(
+            [
+                ft.Text("Новости", size=24),
+                ft.Text("Последние обновления и события."),
+                ft.Text("Новость 1: Вышла новая версия!"),
+                ft.Text("Новость 2: Акция на игры!")
+            ],
+            alignment=ft.MainAxisAlignment.CENTER
+        )
+        page.add(news_panel)
+
+    def show_achievements():
+        """Отображает достижения."""
+        achievements_panel = ft.Column(
+            [
+                ft.Text("Достижения", size=24),
+                ft.Text("Ваши игровые достижения."),
+                ft.Text("Достижение 1: Пройдена первая игра!"),
+                ft.Text("Достижение 2: Открыты все уровни!")
+            ],
+            alignment=ft.MainAxisAlignment.CENTER
+        )
+        page.add(achievements_panel)
+
+    def show_community():
+        """Отображает сообщество."""
+        community_panel = ft.Column(
+            [
+                ft.Text("Сообщество", size=24),
+                ft.Text("Общайтесь с другими игроками."),
+                ft.ElevatedButton(text="Форум", on_click=lambda e: snack_bar_message("Открываем форум...")),
+                ft.ElevatedButton(text="Чат", on_click=lambda e: snack_bar_message("Открываем чат..."))
+            ],
+            alignment=ft.MainAxisAlignment.CENTER
+        )
+        page.add(community_panel)
+
+    def launch_game(game_name):
+        """Запускает игру (заглушка)."""
+        snack_bar_message(f"Запуск {game_name}...")
+
     theme_button = ft.OutlinedButton(text="Темная тема", width=120, on_click=toggle_theme)  # Кнопка смены темы
 
+    # Изначально панель навигации с регистрацией и авторизацией
     page.navigation_bar = ft.NavigationBar(
         destinations=[
             ft.NavigationBarDestination(icon=ft.Icons.VERIFIED_USER, label='Регистрация'),
             ft.NavigationBarDestination(icon=ft.Icons.VERIFIED_USER_OUTLINED, label='Авторизация'),
-            # Иконка "Кабинет" будет добавлена после авторизации в функции auth_user.
         ],
         on_change=navigate
     )
 
     # Отображаем только панель регистрации при запуске приложения
-    page.add(panel_register)
+    show_register()
 
 ft.app(target=main)
