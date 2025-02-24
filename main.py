@@ -222,11 +222,18 @@ def main(page: ft.Page):
 
     def show_games():
         """Отображает список игр."""
+        img = ft.Image(
+            src="",
+            width=300,
+            height=300,
+            fit=ft.ImageFit.CONTAIN,
+        )
+        page.add(img)
+
         games_panel = ft.Column(
             
             [
                 ft.Text("Доступные игры:", size=24),
-                # Здесь можно добавить кнопки для запуска игр
                 ft.ElevatedButton(text="Игра 1", on_click=lambda e: launch_game("Игра 1")),
                 ft.ElevatedButton(text="Игра 2", on_click=lambda e: launch_game("Игра 2")),
                 # Добавьте другие игры по аналогии
@@ -240,13 +247,14 @@ def main(page: ft.Page):
         settings_panel = ft.Column(
             [
                 ft.Text("Настройки", size=24),
-                ft.Text("Здесь будут настройки вашего лаунчера."),
-                ft.ElevatedButton(text="Применить", on_click=lambda e: snack_bar_message("Настройки применены!"))
+                theme_button,
+                ft.ElevatedButton(text="Применить", on_click=lambda e: snack_bar_message("Настройки применены!")),
             ],
             alignment=ft.MainAxisAlignment.CENTER
         )
         page.add(settings_panel)
 
+    #Новости
     def show_news():
         """Отображает новости."""
         news_panel = ft.Column(
