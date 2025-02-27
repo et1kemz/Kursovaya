@@ -1,5 +1,6 @@
 import flet as ft
 from flet import Page, SnackBar, Text
+
 import sqlite3
 
 def main(page: ft.Page):
@@ -223,12 +224,28 @@ def main(page: ft.Page):
     def show_games():
         """Отображает список игр."""
         img = ft.Image(
-            src="",
-            width=300,
-            height=300,
+            src="C:/Users/Семён/Desktop/ис-1-22/узник лп/Kursovaya/game-1-2.jpg",
+            width=100,
+            height=100,
+            repeat=ft.ImageRepeat.REPEAT,
             fit=ft.ImageFit.CONTAIN,
+
         )
+        def on_hover(e):
+            if e.data == "true":   
+                img.width = 200
+                img.height = 200
+            else:
+                img.width = 100
+                img.height = 100
+            
+            page.update()
+
+        img.on_hover = on_hover
+        img.on_hover_changed = lambda e: page.update()
         page.add(img)
+        page.update()
+
 
         games_panel = ft.Column(
             

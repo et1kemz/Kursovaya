@@ -11,6 +11,30 @@ def main(page: ft.Page):
 
     is_authenticated = False
 
+    img_path = r"C:/Users/Семён/Desktop/ис-1-22/узник лп/Kursovaya/game-1-2.jpg"
+    img = ft.Image(
+        src=img_path,
+        width=100,
+        height=100,
+        repeat=ft.ImageRepeat.REPEAT,
+        fit=ft.ImageFit.CONTAIN,
+
+        )
+    def on_hover(e):
+        if e.data == "true":   
+            img.width = 200
+            img.height = 200
+        else:
+            img.width = 100
+            img.height = 100
+            
+        page.update()
+
+    img.on_hover = on_hover
+    img.on_hover_changed = lambda e: page.update()
+    page.add(img)
+    page.update()
+
     def auth_user(e):
         nonlocal is_authenticated
         db = sqlite3.connect('tasks.db')
