@@ -226,9 +226,17 @@ def main(page: ft.Page):
 
         launch_button = ft.ElevatedButton(
         icon=ft.icons.PLAY_ARROW,  # Иконка запуска
+        text="Игра 1",
         on_click=lambda e: launch_game("Игра 1")  # Обработчик клика
     )
+        img = ft.Image(
+                    src=r"https://yandex-images.clstorage.net/iEG501u89/3fbc48c_-vy0/71FUNWTtQORT6vY7gz2G7rd0N61-s4K6uAXkpNbapH-vLkSwMgbwbu6oan5OJ7TqzrMqgIsBUFYuyhIHHk_oUftkUGCAnUC1F1pS-iP8h7p2oAb5XyPCzyjFQsJU3YMcHf1TMlX0VNv-XU8a_7MQ7DjHHkKJVOMD_gpBsPiYbxd9k-SEAS0jlaYoJLgCXLZoF3bl-6zW0RtesiGyJY_hnW_88JKHllXZfc8c2yviY5zKoX-w-nZQUX-JsvGrSj22jNLnp3AcEwZlizTbU-xFi_UGNYu9VyG57XNxciYN4e69_QOQtUXWCr7ePDloELFOq3IcAFmkEhL-muHhGppdVu8TZlZwfXJnRqmUmVJNhgsXZTdLnmdw6-xCYyHXbUC9X09zspf2FTvNrd-Ji8Cz7VoBX2O6RzESznthoZmprRVvAZREst3DxeaoRrtAXHeZZQXGaBxkQHieUuAiJ_yDTQ-8sbLGx5davE1827vxIK0qYf3gW2dBM78JQELKO31GPQOnxwNP4NQnGnaLcn7n2ObEJFvOB-K4vqEhcvbvED3OfQCjFwQmSV_dHSnLAxHOyHJvgXkWgoLcy3CRm6j_J84Ad2bw7NOkJ6sWisLvJSlWFkRZDwXzO--SQSAlXzHsrD3QwafnF5jd3j-oWUIDXbij75AKtuCBXJrC4ulqLqQ9EmS2sS-ihke451nATMX59PcUS77mYqvPoIIh5v6zjP4vQfAFleearl2dOapiQf06oE-TeiXwo-3b8hH6mG82TyLEV3GtIDclO8baESy0ycYWJdvPt2AbvcCTsUddQQxMbxPBR0U2aJ6v_msqwTC86hEMImpWgWFceHPDW4v89twBtwbBfdD1hpskWbEexQh2t0VqLDdBe7xAU9K2nxEfX41BIQWFNzpODo1o2bMhbpnTDUP4BqFxzmvyQMvrn0bPQlV3MX-zJle65TvzjlQIReSky_zEYYh_8IATI",
+                    width=24,
+                    height=24,
+                    repeat=ft.ImageRepeat.REPEAT,
+                    fit=ft.ImageFit.CONTAIN,
 
+        )
         games_panel = ft.Column(
         [
             ft.Text("Доступные игры:", size=24),
@@ -243,14 +251,7 @@ def main(page: ft.Page):
         alignment=ft.MainAxisAlignment.CENTER
     )
         
-        img = ft.Image(
-            src=r"https://img.championat.com/s/1350x900/news/big/m/y/nintendo-vpervye-v-istorii-menyaet-golos-mario-charlz-martine-uhodit-s-roli_16926268251495770937.jpg",
-            width=300,
-            height=200,
-            repeat=ft.ImageRepeat.REPEAT,
-            fit=ft.ImageFit.CONTAIN,
-
-        )
+        
         def on_hover(e):
             if e.data == "true":   
                 img.width = 200
