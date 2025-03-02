@@ -1,16 +1,41 @@
 import flet as ft
-from flet import Page, SnackBar, Text
-
 import sqlite3
 
 def main(page: ft.Page):
     page.title = "Task Management App"
     page.theme_mode = 'dark'
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
-    page.window.width = 400
-    page.window.height = 500
+    page.window_width = 400
+    page.window_height = 500
 
     is_authenticated = False
+
+    # Функция для смены темы
+    def toggle_theme(e):
+        if page.theme_mode == 'dark':
+            page.theme_mode = 'light'
+            theme_button.text = "Темная тема"
+            snack_bar_message("Сменена на светлую тему!")
+        else:
+            page.theme_mode = 'dark'
+            theme_button.text = "Светлая тема"
+            snack_bar_message("Сменена на темную тему!")
+        page.update()
+
+    # Кнопка для смены темы
+    theme_button = ft.ElevatedButton(text="Светлая тема", on_click=toggle_theme)
+
+    # Инициализация NavigationBar
+    page.navigation_bar = ft.NavigationBar(
+        destinations=[
+            ft.NavigationBarDestination(icon=ft.Icons.VERIFIED_USER, label='Регистрация'),
+            ft.NavigationBarDestination(icon=ft.Icons.VERIFIED_USER_OUTLINED, label='Авторизация'),
+        ],
+        on_change=lambda e: navigate(e)
+    )
+
+    # Добавление NavigationBar на страницу
+    page.add(page.navigation_bar)
 
     def auth_user(e):
         nonlocal is_authenticated
@@ -23,8 +48,8 @@ def main(page: ft.Page):
             user_pass.value = ''
             btn_auth.text = 'Авторизовано'
 
-            page.window.width = 600
-            page.window.height = 600
+            page.window_width = 600
+            page.window_height = 600
 
             # Обновляем NavigationBar после авторизации
             page.navigation_bar.destinations = [
@@ -32,7 +57,12 @@ def main(page: ft.Page):
                     icon=ft.Icons.BOOK,
                     label='Кабинет',
                     selected_icon=ft.Icons.BOOKMARK,
-                )
+                ),
+                ft.NavigationBarDestination(icon=ft.Icons.GAMES, label='Игры'),
+                ft.NavigationBarDestination(icon=ft.Icons.SETTINGS, label='Настройки'),
+                ft.NavigationBarDestination(icon=ft.Icons.NEWSPAPER, label='Новости'),
+                ft.NavigationBarDestination(icon=ft.Icons.STAR, label='Достижения'),
+                ft.NavigationBarDestination(icon=ft.Icons.PEOPLE, label='Сообщество'),
             ]
             page.navigation_bar.selected_index = 0  # Выбираем кабинет
             page.update()
@@ -40,7 +70,6 @@ def main(page: ft.Page):
             snack_bar_message("Успешная авторизация!")
 
             # Переход в кабинет
-            load_tasks()
             show_cabinet()  # Отображаем кабинет
 
         else:
@@ -81,18 +110,8 @@ def main(page: ft.Page):
 
     def snack_bar_message(message):
         snack_bar = ft.SnackBar(ft.Text(message))
-        page.open(snack_bar)
-
-    def toggle_theme(e):
-        if page.theme_mode == 'dark':
-            page.theme_mode = 'light'
-            theme_button.text = "Темная тема"
-            snack_bar_message("Сменена на светлую тему!")
-        else:
-            page.theme_mode = 'dark'
-            theme_button.text = "Светлая тема"
-            snack_bar_message("Сменена на темную тему!")
-        
+        page.snack_bar = snack_bar
+        snack_bar.open = True
         page.update()
 
     user_login = ft.TextField(label="Логин", width=200, on_change=validate)
@@ -100,13 +119,6 @@ def main(page: ft.Page):
     
     btn_reg = ft.OutlinedButton(text="Зарегистрировать", width=200, on_click=register, disabled=True)
     btn_auth = ft.OutlinedButton(text="Авторизовать", width=200, on_click=auth_user, disabled=True)
-
-    # Поля для работы с задачами
-    task_input = ft.TextField(label="Введите задачу", width=200)
-    btn_add_task = ft.OutlinedButton(text="Добавить", width=200, on_click=lambda e: add_task())
-
-    # Список задач
-    task_list = ft.ListView(spacing=10)
 
     panel_register = ft.Row(
         [
@@ -153,118 +165,138 @@ def main(page: ft.Page):
         spacing=10,
     )
     
-    page.add(panel_cabinet)
-
-    def navigate(e):
-        """Обрабатывает переключение между панелями."""
-        page.clean()
-        if is_authenticated:
-            if page.navigation_bar.selected_index == 0:
-                show_cabinet()
-            elif page.navigation_bar.selected_index == 1:
-                show_games()
-            elif page.navigation_bar.selected_index == 2:
-                show_settings()
-            elif page.navigation_bar.selected_index == 3:
-                show_news()
-            elif page.navigation_bar.selected_index == 4:
-                show_achievements()
-            elif page.navigation_bar.selected_index == 5:
-                show_community()
-        else:
-            if page.navigation_bar.selected_index == 0:
-                show_register()
-            elif page.navigation_bar.selected_index == 1:
-                show_auth()
-
     def show_register():
         """Отображает панель регистрации."""
         page.clean()
         page.add(panel_register)
+        page.update()
 
     def show_auth():
         """Отображает панель авторизации."""
         page.clean()
         page.add(panel_auth)
+        page.update()
 
     def show_cabinet():
         """Отображает панель кабинета."""
         page.clean()
-        load_tasks()  # Загружаем задачи при переходе в кабинет
         page.add(panel_cabinet)
-        
-        # Добавляем вкладки на навигационную панель
-        if len(page.navigation_bar.destinations) == 1:  # Проверка, чтобы не добавлять повторно
-            page.navigation_bar.destinations.extend([
-                ft.NavigationBarDestination(icon=ft.Icons.GAMES, label='Игры'),
-                ft.NavigationBarDestination(icon=ft.Icons.SETTINGS, label='Настройки'),
-                ft.NavigationBarDestination(icon=ft.Icons.NEWSPAPER, label='Новости'),
-                ft.NavigationBarDestination(icon=ft.Icons.STAR, label='Достижения'),
-                ft.NavigationBarDestination(icon=ft.Icons.PEOPLE, label='Сообщество'),
-            ])
-            page.update()
-
-    def add_task():
-        """Добавляет задачу в список."""
-        task_text = task_input.value.strip()
-        
-        if task_text:
-            # Добавление задачи в список и базу данных (если нужно)
-            task_list.controls.append(ft.Text(task_text))
-            task_input.value = ''  # Очищаем поле ввода задачи
-            snack_bar_message("Задача добавлена!")
-        
         page.update()
 
-    def load_tasks():
-        """Загружает задачи (пример с заглушкой)."""
-        # Здесь можно добавить логику загрузки задач из базы данных.
-        task_list.controls.clear()  # Очищаем текущий список задач (если есть).
-
     def show_games():
-        """Отображает список игр."""
+        """Отображает вкладку с играми."""
+        def launch_game(game_name):
+            """Запускает игру (заглушка)."""
+            snack_bar_message(f"Запуск {game_name}...")
 
-        launch_button = ft.ElevatedButton(
-        icon=ft.icons.PLAY_ARROW,  # Иконка запуска
-        text="Игра 1",
-        on_click=lambda e: launch_game("Игра 1")  # Обработчик клика
-    )
-        img = ft.Image(
-                    src=r"https://yandex-images.clstorage.net/iEG501u89/3fbc48c_-vy0/71FUNWTtQORT6vY7gz2G7rd0N61-s4K6uAXkpNbapH-vLkSwMgbwbu6oan5OJ7TqzrMqgIsBUFYuyhIHHk_oUftkUGCAnUC1F1pS-iP8h7p2oAb5XyPCzyjFQsJU3YMcHf1TMlX0VNv-XU8a_7MQ7DjHHkKJVOMD_gpBsPiYbxd9k-SEAS0jlaYoJLgCXLZoF3bl-6zW0RtesiGyJY_hnW_88JKHllXZfc8c2yviY5zKoX-w-nZQUX-JsvGrSj22jNLnp3AcEwZlizTbU-xFi_UGNYu9VyG57XNxciYN4e69_QOQtUXWCr7ePDloELFOq3IcAFmkEhL-muHhGppdVu8TZlZwfXJnRqmUmVJNhgsXZTdLnmdw6-xCYyHXbUC9X09zspf2FTvNrd-Ji8Cz7VoBX2O6RzESznthoZmprRVvAZREst3DxeaoRrtAXHeZZQXGaBxkQHieUuAiJ_yDTQ-8sbLGx5davE1827vxIK0qYf3gW2dBM78JQELKO31GPQOnxwNP4NQnGnaLcn7n2ObEJFvOB-K4vqEhcvbvED3OfQCjFwQmSV_dHSnLAxHOyHJvgXkWgoLcy3CRm6j_J84Ad2bw7NOkJ6sWisLvJSlWFkRZDwXzO--SQSAlXzHsrD3QwafnF5jd3j-oWUIDXbij75AKtuCBXJrC4ulqLqQ9EmS2sS-ihke451nATMX59PcUS77mYqvPoIIh5v6zjP4vQfAFleearl2dOapiQf06oE-TeiXwo-3b8hH6mG82TyLEV3GtIDclO8baESy0ycYWJdvPt2AbvcCTsUddQQxMbxPBR0U2aJ6v_msqwTC86hEMImpWgWFceHPDW4v89twBtwbBfdD1hpskWbEexQh2t0VqLDdBe7xAU9K2nxEfX41BIQWFNzpODo1o2bMhbpnTDUP4BqFxzmvyQMvrn0bPQlV3MX-zJle65TvzjlQIReSky_zEYYh_8IATI",
-                    width=24,
-                    height=24,
-                    repeat=ft.ImageRepeat.REPEAT,
-                    fit=ft.ImageFit.CONTAIN,
+        def show_game_details(game_name):
+            """Показывает подробности об игре."""
+            # Создаем контейнер для деталей игры
+            details_panel = ft.Column(
+                [
+                    ft.Text(game_name, size=24, weight=ft.FontWeight.BOLD),
+                    ft.Text("Описание игры:", size=18),
+                    ft.Text("Главными героями игры являются водопроводчик Марио и его брат Луиджи (в качестве игрового персонажа для второго игрока). Цель игры — пройти через Грибное королевство, ускользая или уничтожая солдат черепашьего Короля Купы (также известного как Боузер), чтобы спасти захваченную им в плен Принцессу.", size=14),
+                    ft.Text("Рейтинг: ⭐⭐⭐⭐ (4.5/5)", size=14),
+                    ft.Text("Жанр: Платформер, Приключения", size=14),
+                    ft.Text("Дата выхода: 1985", size=14),
+                    ft.Text("Скриншоты:", size=18),
+                    ft.Row(
+                        [
+                            ft.Image(src="https://files.vgtimes.ru/gallery/thumb/31168/214730-1177890878_00.webp", width=150, height=150),
+                            ft.Image(src="https://files.vgtimes.ru/gallery/thumb/31168/214742-1177890879_03.webp", width=150, height=150),
+                            ft.Image(src="https://www.researchgate.net/publication/269108638/figure/fig1/AS:366488893575168@1464389169026/Screenshots-of-the-games-Super-Mario-Bros-A-Little-Big-Planet-B-and-Sonic-The.png", width=150, height=150),
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
+                    ft.ElevatedButton(
+                        text="Назад",
+                        on_click=lambda e: show_games(),  # Возвращаемся к списку игр
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            )
 
-        )
-        games_panel = ft.Column(
-        [
-            ft.Text("Доступные игры:", size=24),
-            launch_button,  # Добавление кнопки с иконкой
-            ft.ElevatedButton(
-                icon=ft.icons.PLAY_ARROW,  # Иконка запуска
-                text="Игра 2",  # Текст на кнопке
-                on_click=lambda e: launch_game("Игра 2")  # Обработчик клика
-            ),
-            # Добавьте другие игры по аналогии
-        ],
-        alignment=ft.MainAxisAlignment.CENTER
-    )
-        
-        
-        def on_hover(e):
-            if e.data == "true":   
-                img.width = 200
-                img.height = 200
-            else:
-                img.width = 100
-                img.height = 100
-            
+            # Очищаем страницу и добавляем детали игры
+            page.clean()
+            page.add(details_panel)
             page.update()
 
-        img.on_hover = on_hover
-        img.on_hover_changed = lambda e: page.update()
-        page.add(games_panel,img)
+        def create_game_card(game_name, description, rating, image_url):
+            """Создает карточку для игры."""
+            return ft.Card(
+                elevation=5,
+                content=ft.Container(
+                    content=ft.Column(
+                        [
+                            ft.Image(src=image_url, width=150, height=150, fit=ft.ImageFit.COVER),
+                            ft.Text(game_name, size=20, weight=ft.FontWeight.BOLD),
+                            ft.Text(description, size=14, color=ft.colors.GREY_400),
+                            ft.Row(
+                                controls=[
+                                    ft.Icon(ft.Icons.STAR, color=ft.colors.AMBER, size=16),
+                                    ft.Text(str(rating), size=14, color=ft.colors.GREY_400),
+                                ],
+                                alignment=ft.MainAxisAlignment.CENTER,
+                            ),
+                            ft.Row(
+                                controls=[
+                                    ft.ElevatedButton(
+                                        text="Играть",
+                                        icon=ft.Icons.PLAY_ARROW,
+                                        on_click=lambda e: launch_game(game_name),
+                                    ),
+                                    ft.ElevatedButton(
+                                        text="Подробнее",
+                                        on_click=lambda e: show_game_details(game_name),
+                                    ),
+                                ],
+                                alignment=ft.MainAxisAlignment.CENTER,
+                                spacing=10,
+                            ),
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    ),
+                    width=200,
+                    padding=10,
+                    border_radius=ft.border_radius.all(10),
+                )
+            )
+
+        # Создаем карточки для игр
+        game1_card = create_game_card(
+            "Super Mario Bros.",
+            "Тот самый водопроводчик!",
+            4.5,
+            "https://img.icons8.com/?size=100&id=n2v99rZKO7h5&format=png&color=000000",  # Замените на реальный URL скриншота
+        )
+
+        game2_card = create_game_card(
+            "Snake",
+            "Собери все фрукты!",
+            4.8,
+            "https://cdn-icons-png.flaticon.com/512/427/427533.png",  # Замените на реальный URL скриншота
+        )
+
+        # Создаем контейнер для карточек игр
+        games_panel = ft.Column(
+            [
+                ft.Text("Доступные игры:", size=24, weight=ft.FontWeight.BOLD),
+                ft.Row(
+                    [game1_card, game2_card],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    spacing=20,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+
+        # Добавляем игры на страницу
+        page.clean()
+        page.add(games_panel)
         page.update()
 
     def show_settings():
@@ -272,14 +304,15 @@ def main(page: ft.Page):
         settings_panel = ft.Column(
             [
                 ft.Text("Настройки", size=24),
-                theme_button,
+                theme_button,  # Используем глобальную кнопку
                 ft.ElevatedButton(text="Применить", on_click=lambda e: snack_bar_message("Настройки применены!")),
             ],
             alignment=ft.MainAxisAlignment.CENTER
         )
+        page.clean()
         page.add(settings_panel)
+        page.update()
 
-    #Новости
     def show_news():
         """Отображает новости."""
         news_panel = ft.Column(
@@ -291,7 +324,9 @@ def main(page: ft.Page):
             ],
             alignment=ft.MainAxisAlignment.CENTER
         )
+        page.clean()
         page.add(news_panel)
+        page.update()
 
     def show_achievements():
         """Отображает достижения."""
@@ -304,7 +339,9 @@ def main(page: ft.Page):
             ],
             alignment=ft.MainAxisAlignment.CENTER
         )
+        page.clean()
         page.add(achievements_panel)
+        page.update()
 
     def show_community():
         """Отображает сообщество."""
@@ -317,22 +354,32 @@ def main(page: ft.Page):
             ],
             alignment=ft.MainAxisAlignment.CENTER
         )
+        page.clean()
         page.add(community_panel)
+        page.update()
 
-    def launch_game(game_name):
-        """Запускает игру (заглушка)."""
-        snack_bar_message(f"Запуск {game_name}...")
-
-    theme_button = ft.OutlinedButton(text="Темная тема", width=120, on_click=toggle_theme)  # Кнопка смены темы
-
-    # Изначально панель навигации с регистрацией и авторизацией
-    page.navigation_bar = ft.NavigationBar(
-        destinations=[
-            ft.NavigationBarDestination(icon=ft.Icons.VERIFIED_USER, label='Регистрация'),
-            ft.NavigationBarDestination(icon=ft.Icons.VERIFIED_USER_OUTLINED, label='Авторизация'),
-        ],
-        on_change=navigate
-    )
+    def navigate(e):
+        """Обрабатывает переключение между панелями."""
+        if page.navigation_bar is not None:
+            page.clean()
+            if is_authenticated:
+                if page.navigation_bar.selected_index == 0:
+                    show_cabinet()
+                elif page.navigation_bar.selected_index == 1:
+                    show_games()
+                elif page.navigation_bar.selected_index == 2:
+                    show_settings()
+                elif page.navigation_bar.selected_index == 3:
+                    show_news()
+                elif page.navigation_bar.selected_index == 4:
+                    show_achievements()
+                elif page.navigation_bar.selected_index == 5:
+                    show_community()
+            else:
+                if page.navigation_bar.selected_index == 0:
+                    show_register()
+                elif page.navigation_bar.selected_index == 1:
+                    show_auth()
 
     # Отображаем только панель регистрации при запуске приложения
     show_register()
