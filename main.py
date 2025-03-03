@@ -1,5 +1,8 @@
+# main.py
 import flet as ft
 import sqlite3
+import subprocess
+import sys
 
 def main(page: ft.Page):
     page.title = "Task Management App"
@@ -252,9 +255,17 @@ def main(page: ft.Page):
     def show_games():
         """Отображает вкладку с играми."""
         def launch_game(game_name):
-            """Запускает игру (заглушка)."""
-            snack_bar_message(f"Запуск {game_name}...")
-
+            """Запускает игру."""
+            if game_name == "Snake":
+            # Запускаем игру "Змейка" в отдельном процессе
+                subprocess.Popen([sys.executable, "snake_game.py"])
+            elif game_name == "Super Mario Bros.":
+            # Запускаем игру "Super Mario Bros." в отдельном процессе
+                subprocess.Popen([sys.executable, "mario_game.py"])
+            else:
+                snack_bar_message(f"Запуск {game_name}...")
+            
+    
         def create_game_card(game_name, game_data):
             """Создает карточку для игры."""
             return ft.Card(
