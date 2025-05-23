@@ -188,20 +188,20 @@ def main(page: ft.Page):
 
     # Словарь с данными игр
     games_data = {
-        "Super Mario Bros.": {
-            "icon": "https://img.icons8.com/?size=100&id=n2v99rZKO7h5&format=png&color=000000",  # Иконка игры
-            "description": "Тот самый водопроводчик!",
-            "rating": 4.5,
-            "genre": "Приключения, Платформер",
-            "release_date": "1985",
+        "Doodle Jump": {
+            "icon": "https://play-lh.googleusercontent.com/Wk-7Rw4jW6v7zGtEjxuH8TdY9zQx8UJ2sOZkqYwQ8yJY9y9y9y9y9y9y9y9y9y9y9y9",
+            "description": "Классическая игра с прыжками по платформам!",
+            "rating": 4.7,
+            "genre": "Аркада, Платформер",
+            "release_date": "2009",
             "screenshots": [
-                "https://files.vgtimes.ru/gallery/thumb/31168/214730-1177890878_00.webp",
-                "https://files.vgtimes.ru/gallery/thumb/31168/214742-1177890879_03.webp",
-                "https://files.vgtimes.ru/gallery/thumb/31168/214723-1177890883_02.webp",
+                "https://play-lh.googleusercontent.com/Wk-7Rw4jW6v7zGtEjxuH8TdY9zQx8UJ2sOZkqYwQ8yJY9y9y9y9y9y9y9y9y9y9y9",
+                "https://play-lh.googleusercontent.com/Wk-7Rw4jW6v7zGtEjxuH8TdY9zQx8UJ2sOZkqYwQ8yJY9y9y9y9y9y9y9y9y9y9y9",
+                "https://play-lh.googleusercontent.com/Wk-7Rw4jW6v7zGtEjxuH8TdY9zQx8UJ2sOZkqYwQ8yJY9y9y9y9y9y9y9y9y9y9y9",
             ],
         },
         "Snake": {
-            "icon": "https://cdn-icons-png.flaticon.com/512/427/427533.png",  # Иконка игры
+            "icon": "https://cdn-icons-png.flaticon.com/512/427/427533.png",
             "description": "Классическая казуальная змейка!",
             "rating": 4.8,
             "genre": "Казуальная, Аркада",
@@ -257,11 +257,11 @@ def main(page: ft.Page):
         def launch_game(game_name):
             """Запускает игру."""
             if game_name == "Snake":
-            # Запускаем игру "Змейка" в отдельном процессе
+                # Запускаем игру "Змейка" в отдельном процессе
                 subprocess.Popen([sys.executable, "snake_game.py"])
-            elif game_name == "Super Mario Bros.":
-            # Запускаем игру "Super Mario Bros." в отдельном процессе
-                subprocess.Popen([sys.executable, "mario_game.py"])
+            elif game_name == "Doodle Jump":
+                # Запускаем игру "Doodle Jump" в отдельном процессе
+                subprocess.Popen([sys.executable, "doodle_jump.py"])
             else:
                 snack_bar_message(f"Запуск {game_name}...")
             
@@ -275,11 +275,11 @@ def main(page: ft.Page):
                         [
                             ft.Image(src=game_data["icon"], width=150, height=150, fit=ft.ImageFit.COVER),
                             ft.Text(game_name, size=20, weight=ft.FontWeight.BOLD),
-                            ft.Text(game_data["description"], size=14, color=ft.colors.GREY_400),
+                            ft.Text(game_data["description"], size=14, color=ft.Colors.GREY_400),
                             ft.Row(
                                 controls=[
-                                    ft.Icon(ft.Icons.STAR, color=ft.colors.AMBER, size=16),
-                                    ft.Text(str(game_data["rating"]), size=14, color=ft.colors.GREY_400),
+                                    ft.Icon(ft.Icons.STAR, color=ft.Colors.AMBER, size=16),
+                                    ft.Text(str(game_data["rating"]), size=14, color=ft.Colors.GREY_400),
                                 ],
                                 alignment=ft.MainAxisAlignment.CENTER,
                             ),
